@@ -42,7 +42,7 @@ io.on("connection", (socket) => {
 // Middleware
 app.use(express.json({ limit: "4mb" }));
 app.use(cors({
-  origin: "https://chat-app-backend-two-wine.vercel.app/",
+  origin: "http://localhost:5173",
   credentials: true
 }));
 
