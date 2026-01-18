@@ -60,4 +60,4 @@ server.listen(PORT, () => console.log("server running on PORT:", PORT));
 }
 
 // Export server for vercel
-export default server;
+export default server
