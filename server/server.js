@@ -7,14 +7,19 @@ import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoute.js";
 import { Server } from "socket.io";
 
-// Express app + HTTP server
 const app = express();
 const server = http.createServer(app);
 
-// Socket.IO setup with CORS
+// Allowed frontend URL
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+// Socket.IO setup
 export const io = new Server(server, {
   cors: {
-    origin: "*", // React frontend
+    origin: (origin, callback) => {
+      if (!origin || origin === FRONTEND_URL) callback(null, true);
+      else callback(new Error("CORS not allowed"));
+    },
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -23,13 +28,11 @@ export const io = new Server(server, {
 // Store online users
 export const userSocketMap = {};
 
-// Socket connection
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
   console.log("user connected", userId);
   if (userId) userSocketMap[userId] = socket.id;
 
-  // Emit online users
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
@@ -42,7 +45,10 @@ io.on("connection", (socket) => {
 // Middleware
 app.use(express.json({ limit: "4mb" }));
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: (origin, callback) => {
+    if (!origin || origin === FRONTEND_URL) callback(null, true);
+    else callback(new Error("CORS not allowed"));
+  },
   credentials: true
 }));
 
@@ -53,11 +59,12 @@ app.use("/api/messages", messageRouter);
 
 // Connect to DB
 await connectDB();
+
+// Start server (local only)
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log("server running on PORT:", PORT));
-  
+  server.listen(PORT, () => console.log("server running on PORT:", PORT));
 }
 
-// Export server for vercel
-export default server
+// Export server for Vercel
+export default server;
