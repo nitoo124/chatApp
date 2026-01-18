@@ -7,19 +7,21 @@ import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoute.js";
 import { Server } from "socket.io";
 
+// Express app + HTTP server
 const app = express();
 const server = http.createServer(app);
 
-// Allowed frontend URL
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+// Allowed origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://chat-app-ten-rho-l4tw1xe5yu.vercel.app"
+];
 
-// Socket.IO setup
+// Socket.IO setup with CORS
 export const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      if (!origin || origin === FRONTEND_URL) callback(null, true);
-      else callback(new Error("CORS not allowed"));
-    },
+    origin: allowedOrigins,  // Use the same origins
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -28,11 +30,13 @@ export const io = new Server(server, {
 // Store online users
 export const userSocketMap = {};
 
+// Socket connection
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
   console.log("user connected", userId);
   if (userId) userSocketMap[userId] = socket.id;
 
+  // Emit online users
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
@@ -44,10 +48,18 @@ io.on("connection", (socket) => {
 
 // Middleware
 app.use(express.json({ limit: "4mb" }));
+
+// CORS configuration
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || origin === FRONTEND_URL) callback(null, true);
-    else callback(new Error("CORS not allowed"));
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true
 }));
@@ -59,12 +71,10 @@ app.use("/api/messages", messageRouter);
 
 // Connect to DB
 await connectDB();
-
-// Start server (local only)
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => console.log("server running on PORT:", PORT));
 }
 
-// Export server for Vercel
+// Export server for vercel
 export default server;
