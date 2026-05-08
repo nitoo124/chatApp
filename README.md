@@ -32,7 +32,7 @@ A full-stack real-time chat application built with the MERN Stack and Socket.io 
 - MongoDB
 - Mongoose
 - Socket.io
-- JWT Authentication
+- Authentication
 - bcrypt.js
 
 ---
@@ -100,10 +100,7 @@ Create a `.env` file inside the `server` folder and add:
 
 ```env
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-PORT=5000
-```
-
+PORT:your port
 ---
 
 ## ▶️ Run Project
@@ -112,21 +109,21 @@ PORT=5000
 
 ```bash
 cd server
-npm run dev
+npm start
 ```
 
 ### Start Frontend
 
 ```bash
 cd client
-npm start
+npm run dev
 ```
 
 ---
 
 ## 🌍 Live Demo
 
-[Add Your Live Link Here]
+[https://chat-app-ten-rho-l4tw1xe5yu.vercel.app/login]
 
 ---
 
